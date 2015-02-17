@@ -8,6 +8,8 @@
 #include <fstream>
 #include <GLFW/glfw3.h>
 
+
+
 #include <iostream>
 
 
@@ -15,16 +17,23 @@
 const GLchar* vertexSource =
 "#version 330\n"
 "in vec2 position;"
-"void main() {"
+"in vec3 color;"
+"out vec3 Color;"
+"void main() "
+"{"
+"   Color = color;"
 "	gl_Position = vec4(position, 0.0, 1.0);"
 "}";
 
 const GLchar* fragmentSource =
 "#version 330\n"
-"uniform vec3 triangleColor;"
+//"uniform vec3 triangleColor;"
+"in vec3 Color;"
 "out vec4 outColor;"
-"void main() {"
-"	outColor = vec4(triangleColor, 1.0);"
+"void main() "
+"{"
+//"	outColor = vec4(triangleColor, 1.0);"
+"   outColor = vec4(Color, 1.0);"
 "}";
 
 GLuint CreateShader(GLenum a_eShaderType, const char *a_strShaderFile)
@@ -123,9 +132,9 @@ GLuint CreateProgram(const char *a_vertex, const char *a_frag)
 
 float vertices[] =
 {
-	0.0f, 0.5f,  // Vertex 1 (X, Y)
-	0.5f, -0.5f, // Vertex 2 (X, Y)
-	-0.5f, -0.5f // Vertex 3 (X, Y)
+	0.0f, 0.5f,   1.0f, 0.0f, 0.0f, // Vertex 1 (X, Y) red
+	0.5f, -0.5f,  0.0f, 1.0f, 0.0f, // Vertex 2 (X, Y) green
+	-0.5f, -0.5f, 0.0f, 0.0f, 1.0f // Vertex 3 (X, Y)  blue
 };
 
 
@@ -174,6 +183,8 @@ int main()
 	glShaderSource(vertexShader, 1, &vertexSource, NULL);
 	glCompileShader(vertexShader);
 
+
+
 	GLint status;
 	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &status);
 
@@ -182,6 +193,11 @@ int main()
 		printf("Vertex shader compiled successfully bruh\n");
 		printf("I furted\n");
 	}
+	else if (status == GL_FALSE)
+	{
+		printf("Vertex shader error.\n");
+	}
+
 
 	char buffer[512];
 	glGetShaderInfoLog(vertexShader, 512, NULL, buffer);
@@ -232,11 +248,15 @@ int main()
 	//time to link mofer shitea
 	//Retrieving Postion
 	GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
-
-	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(posAttrib);
-
+	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), 0);
+	
+	GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
+	glEnableVertexAttribArray(colAttrib);
+	glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
+	
 	GLint uniColor = glGetUniformLocation(shaderProgram, "triangleColor");
+	glUniform3f(uniColor, 1.0f, 0.0f, 0.0f);
 
 
 
@@ -244,10 +264,15 @@ int main()
 	while (!glfwWindowShouldClose(window))
 	{
 		//draw code goes here
-		glClearColor(0.1f, 0.3f, 0.3f, 0.0f);
+
+		// background color
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		float time = (float)glfwGetTime();
+		glUniform3f(uniColor, (sin(time * 4.0f) + 1.0f) / 2.0f, 0.0f, 0.0f);
 
 		//swap front and back buffers
 		glfwSwapBuffers(window);
