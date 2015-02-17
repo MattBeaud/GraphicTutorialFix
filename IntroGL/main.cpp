@@ -130,13 +130,23 @@ GLuint CreateProgram(const char *a_vertex, const char *a_frag)
 	return uiProgram;
 }
 
+//float vertices[] =
+//{
+//	0.0f, 0.5f,   1.0f, 0.0f, 0.0f, // Vertex 1 (X, Y) red
+//	0.5f, -0.5f,  0.0f, 1.0f, 0.0f, // Vertex 2 (X, Y) green
+//	-0.5f, -0.5f, 0.0f, 0.0f, 1.0f // Vertex 3 (X, Y)  blue
+//};
 float vertices[] =
 {
-	0.0f, 0.5f,   1.0f, 0.0f, 0.0f, // Vertex 1 (X, Y) red
-	0.5f, -0.5f,  0.0f, 1.0f, 0.0f, // Vertex 2 (X, Y) green
-	-0.5f, -0.5f, 0.0f, 0.0f, 1.0f // Vertex 3 (X, Y)  blue
-};
+	-0.5f, 0.5f, 1.0f, 0.0f, 0.0f,  //top-left
+	0.5f, 0.5f, 0.0f, 1.0f, 0.0f,  //top-right
+	0.5f, -0.5f, 0.0f, 0.0f, 1.0f,  //butt-right
+	-0.5f, -0.5f, 1.0f, 1.0f, 1.0f //bottom left
 
+	//0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, //butt-right
+	//-0.5f, -0.5f, 1.0f, 1.0f, 1.0f, //butt-left
+	//-0.5f,  0.5f, 1.0f, 0.0f, 0.0f  //top left
+};
 
 int main()
 {
@@ -183,7 +193,40 @@ int main()
 	glShaderSource(vertexShader, 1, &vertexSource, NULL);
 	glCompileShader(vertexShader);
 
+	GLuint tex;
+	glGenTextures(1, &tex);
 
+	glBindTexture(GL_TEXTURE_2D, tex);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
+
+	/*GLuint elements[] =
+	{
+		0, 1, 2
+	};*/
+
+	GLuint elements[] =
+	{
+		0, 1, 2,
+		2, 3, 0
+	};
+
+	GLuint ebo;
+	glGenBuffers(1, &ebo);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
+
+	
+
+	
+
+
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 	GLint status;
 	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &status);
@@ -269,7 +312,10 @@ int main()
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		//glDrawArrays(GL_TRIANGLES, 0, 6);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+		//glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 
 		float time = (float)glfwGetTime();
 		glUniform3f(uniColor, (sin(time * 4.0f) + 1.0f) / 2.0f, 0.0f, 0.0f);
