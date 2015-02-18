@@ -16,13 +16,16 @@
 //Shader Sources BRUH
 const GLchar* vertexSource =
 "#version 330\n"
-"in vec2 position;"
-"in vec3 color;"
+//"in vec2 position;"
+"in vec2 texcoord"
+//"in vec3 color;"
 "out vec3 Color;"
+"out vec2 Texcoord;"
 "void main() "
 "{"
-"   Color = color;"
-"	gl_Position = vec4(position, 0.0, 1.0);"
+"Texcoord = texcood;"
+//"   Color = color;"
+//"	gl_Position = vec4(position, 0.0, 1.0);"
 "}";
 
 const GLchar* fragmentSource =
@@ -138,10 +141,10 @@ GLuint CreateProgram(const char *a_vertex, const char *a_frag)
 //};
 float vertices[] =
 {
-	-0.5f, 0.5f, 1.0f, 0.0f, 0.0f,  //top-left
-	0.5f, 0.5f, 0.0f, 1.0f, 0.0f,  //top-right
-	0.5f, -0.5f, 0.0f, 0.0f, 1.0f,  //butt-right
-	-0.5f, -0.5f, 1.0f, 1.0f, 1.0f //bottom left
+	-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, //top-left
+	0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, //top-right
+	0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, //butt-right
+	-0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f //bottom left
 
 	//0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, //butt-right
 	//-0.5f, -0.5f, 1.0f, 1.0f, 1.0f, //butt-left
@@ -203,6 +206,27 @@ int main()
 
 	float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	int width, height;
+	unsigned char* image =
+		SOIL_load_image("img.png", &width, &height, 0, SOIL_LOAD_RGB);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+
+	SOIL_free_image_data(image);
+
+
+	//Black/White Checkboard
+	float pixels[] =
+	{
+		0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f
+	};
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 2, 2, 0, GL_RGB, GL_FLOAT, pixels);
 
 	/*GLuint elements[] =
 	{
@@ -291,12 +315,17 @@ int main()
 	//time to link mofer shitea
 	//Retrieving Postion
 	GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
-	glEnableVertexAttribArray(posAttrib);
-	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), 0);
-	
 	GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
+	glEnableVertexAttribArray(posAttrib);
 	glEnableVertexAttribArray(colAttrib);
-	glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
+	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 7*sizeof(float), 0);
+	glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(2 * sizeof(float)));
+	
+	
+	GLint texAttrib = glGetAttribLocation(shaderProgram, "texcoord");
+	glEnableVertexAttribArray(texAttrib);
+	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(5 * sizeof(float)));
+	
 	
 	GLint uniColor = glGetUniformLocation(shaderProgram, "triangleColor");
 	glUniform3f(uniColor, 1.0f, 0.0f, 0.0f);
