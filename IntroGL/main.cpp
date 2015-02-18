@@ -16,27 +16,32 @@
 //Shader Sources BRUH
 const GLchar* vertexSource =
 "#version 330\n"
-//"in vec2 position;"
-"in vec2 texcoord"
-//"in vec3 color;"
+"in vec2 position;"
+"in vec2 texcoord;"
+"in vec3 color;"
 "out vec3 Color;"
 "out vec2 Texcoord;"
 "void main() "
 "{"
-"Texcoord = texcood;"
-//"   Color = color;"
-//"	gl_Position = vec4(position, 0.0, 1.0);"
+"	Texcoord = texcoord;"
+"   Color = color;"
+"	gl_Position = vec4(position, 0.0, 1.0);"
 "}";
 
 const GLchar* fragmentSource =
 "#version 330\n"
 //"uniform vec3 triangleColor;"
 "in vec3 Color;"
+"in vec2 Texcoord;"
 "out vec4 outColor;"
+"uniform sampler2D texKitten;"
+"uniform sampler2D texPuppy"
 "void main() "
 "{"
-//"	outColor = vec4(triangleColor, 1.0);"
-"   outColor = vec4(Color, 1.0);"
+"   vec4 colKitten = texture(texKitten, Texcoord);"
+"	vec4 colPuppy = texture(texPuppy, Texcoord);"
+"	outColor = mix(colKitten, colPuppy, 0.5);"
+//"   outColor = texture(tex, Texcoord) * vec4(Color, 1.0);"
 "}";
 
 GLuint CreateShader(GLenum a_eShaderType, const char *a_strShaderFile)
@@ -139,16 +144,24 @@ GLuint CreateProgram(const char *a_vertex, const char *a_frag)
 //	0.5f, -0.5f,  0.0f, 1.0f, 0.0f, // Vertex 2 (X, Y) green
 //	-0.5f, -0.5f, 0.0f, 0.0f, 1.0f // Vertex 3 (X, Y)  blue
 //};
-float vertices[] =
-{
-	-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, //top-left
-	0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, //top-right
-	0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, //butt-right
-	-0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f //bottom left
+//float vertices[] =
+//{
+//	-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, //top-left
+//	0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, //top-right
+//	0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, //butt-right
+//	-0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f //bottom left
 
 	//0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, //butt-right
 	//-0.5f, -0.5f, 1.0f, 1.0f, 1.0f, //butt-left
 	//-0.5f,  0.5f, 1.0f, 0.0f, 0.0f  //top left
+//};
+
+float vertices[] = {
+	//  Position   Color             Texcoords
+	-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left
+	0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top-right
+	0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // Bottom-right
+	-0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // Bottom-left
 };
 
 int main()
@@ -182,6 +195,8 @@ int main()
 	}
 	//..............................................................................
 	//looooppppooop unitl user closes windooe
+
+	// GENERATE BUFFERS
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
 	//Start using by bindiing;sehti
@@ -192,66 +207,23 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertexSource, NULL);
-	glCompileShader(vertexShader);
-
-	GLuint tex;
-	glGenTextures(1, &tex);
-
-	glBindTexture(GL_TEXTURE_2D, tex);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-	float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
-	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	int width, height;
-	unsigned char* image =
-		SOIL_load_image("img.png", &width, &height, 0, SOIL_LOAD_RGB);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-
-	SOIL_free_image_data(image);
-
-
-	//Black/White Checkboard
-	float pixels[] =
-	{
-		0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f
-	};
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 2, 2, 0, GL_RGB, GL_FLOAT, pixels);
-
-	/*GLuint elements[] =
-	{
-		0, 1, 2
-	};*/
+	GLuint ebo;
+	glGenBuffers(1, &ebo);
 
 	GLuint elements[] =
 	{
 		0, 1, 2,
 		2, 3, 0
 	};
-
-	GLuint ebo;
-	glGenBuffers(1, &ebo);
-
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
 
-	
-
-	
-
-
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
+	// GENERATE SHADERS
+//VERTEX
+	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShader, 1, &vertexSource, NULL);
+	glCompileShader(vertexShader);
+	//TEST
 	GLint status;
 	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &status);
 
@@ -264,23 +236,22 @@ int main()
 	{
 		printf("Vertex shader error.\n");
 	}
-
-
 	char buffer[512];
 	glGetShaderInfoLog(vertexShader, 512, NULL, buffer);
 
 	printf(buffer);
-
+//-------------------------------------------------------------
+	//FRAGMENT
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
 	glCompileShader(fragmentShader);
-
+	//TEST(SHIT)
 	GLint SHIT;
 	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &SHIT);
 
 	if (SHIT == GL_TRUE)
 	{
-		printf("SHIT IS TRUE BITCH\n");
+		printf("Shit's working fragment shader \n");
 	}
 	else if (SHIT == GL_FALSE)
 	{
@@ -288,16 +259,16 @@ int main()
 
 	}
 
+	// SHADER PROGRAM
 	GLuint shaderProgram = glCreateProgram();
 	glAttachShader(shaderProgram, vertexShader);
 	glAttachShader(shaderProgram, fragmentShader);
-
 	//glBindFragDataLocation(shaderProgram, 0, "outColor");
 	//Linksshit
 	glLinkProgram(shaderProgram);
 	//start using shit
 	glUseProgram(shaderProgram);
-	
+
 	GLint statusProgram;
 	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &statusProgram);
 	if (statusProgram == GL_FALSE)
@@ -311,43 +282,52 @@ int main()
 		fprintf(stderr, "Linker failure: %s\n", strInfoLog);
 		delete[] strInfoLog;
 	}
+//=================================================================
 
-	//time to link mofer shitea
+	// LOAD TEXTURE
+	GLuint tex;
+	glGenTextures(1, &tex);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, tex);
+	int width, height;
+	unsigned char* image =
+		SOIL_load_image("sample.png", &width, &height, 0, SOIL_LOAD_RGB);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+		SOIL_free_image_data(image);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
 	//Retrieving Postion
 	GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
-	GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
-	glEnableVertexAttribArray(posAttrib);
-	glEnableVertexAttribArray(colAttrib);
-	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 7*sizeof(float), 0);
-	glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(2 * sizeof(float)));
-	
-	
 	GLint texAttrib = glGetAttribLocation(shaderProgram, "texcoord");
+	GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
+	
+	glEnableVertexAttribArray(posAttrib);
 	glEnableVertexAttribArray(texAttrib);
+	glEnableVertexAttribArray(colAttrib);
+	
+	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), 0);
 	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(5 * sizeof(float)));
+	glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(2 * sizeof(float)));	
 	
-	
-	GLint uniColor = glGetUniformLocation(shaderProgram, "triangleColor");
-	glUniform3f(uniColor, 1.0f, 0.0f, 0.0f);
-
-
-
+	glUniform1i(glGetUniformLocation(shaderProgram, "tex"), 0);
 
 	while (!glfwWindowShouldClose(window))
 	{
 		//draw code goes here
 
 		// background color
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		glClearColor(0.5f, 0.3f, 0.6f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		//glDrawArrays(GL_TRIANGLES, 0, 6);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		//glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
-
-		float time = (float)glfwGetTime();
-		glUniform3f(uniColor, (sin(time * 4.0f) + 1.0f) / 2.0f, 0.0f, 0.0f);
 
 		//swap front and back buffers
 		glfwSwapBuffers(window);
