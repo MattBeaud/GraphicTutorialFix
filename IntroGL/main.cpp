@@ -35,13 +35,10 @@ const GLchar* fragmentSource =
 "in vec2 Texcoord;"
 "out vec4 outColor;"
 "uniform sampler2D texKitten;"
-"uniform sampler2D texPuppy"
+"uniform sampler2D texPuppy;"
 "void main() "
 "{"
-"   vec4 colKitten = texture(texKitten, Texcoord);"
-"	vec4 colPuppy = texture(texPuppy, Texcoord);"
-"	outColor = mix(colKitten, colPuppy, 0.5);"
-//"   outColor = texture(tex, Texcoord) * vec4(Color, 1.0);"
+"	outColor = mix(texture(texKitten,Texcoord), texture(texPuppy, Texcoord), 0.5);"
 "}";
 
 GLuint CreateShader(GLenum a_eShaderType, const char *a_strShaderFile)
@@ -285,16 +282,30 @@ int main()
 //=================================================================
 
 	// LOAD TEXTURE
-	GLuint tex;
-	glGenTextures(1, &tex);
+	GLuint textures[2];
+	glGenTextures(2, textures);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, tex);
+	glBindTexture(GL_TEXTURE_2D, textures[0]);
 	int width, height;
 	unsigned char* image =
 		SOIL_load_image("sample.png", &width, &height, 0, SOIL_LOAD_RGB);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 		SOIL_free_image_data(image);
+	glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, textures[1]);
+		image = SOIL_load_image("sample2.png", &width, &height, 0, SOIL_LOAD_RGB);
+		glTexImage2D(GL_TEXTURE_2D, 0 , GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+		SOIL_free_image_data(image);
+	glUniform1i(glGetUniformLocation(shaderProgram, "texPuppy"), 1);
+
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -313,8 +324,6 @@ int main()
 	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), 0);
 	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(5 * sizeof(float)));
 	glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(2 * sizeof(float)));	
-	
-	glUniform1i(glGetUniformLocation(shaderProgram, "tex"), 0);
 
 	while (!glfwWindowShouldClose(window))
 	{
