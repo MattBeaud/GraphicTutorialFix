@@ -8,8 +8,11 @@
 #include <fstream>
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
-
+#include <ctime>
 #include <iostream>
 
 
@@ -17,15 +20,22 @@
 const GLchar* vertexSource =
 "#version 330\n"
 "in vec2 position;"
-"in vec2 texcoord;"
 "in vec3 color;"
+"in vec2 texcoord;"
+
 "out vec3 Color;"
 "out vec2 Texcoord;"
+
+"uniform mat4 model;"
+"uniform mat4 view;"
+"uniform mat4 proj;"
+
+
 "void main() "
 "{"
 "	Texcoord = texcoord;"
 "   Color = color;"
-"	gl_Position = vec4(position, 0.0, 1.0);"
+"	gl_Position = proj * view * model * vec4(position, 0.0, 1.0);"
 "}";
 
 const GLchar* fragmentSource =
@@ -324,14 +334,55 @@ int main()
 	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), 0);
 	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(5 * sizeof(float)));
 	glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(2 * sizeof(float)));	
+	//---------------------------------------------------------------------------------------------------------
+	//3D tranforms stuffs
+	GLint uniModel = glGetUniformLocation(shaderProgram, "model");
+
+	glm::mat4 view = glm::lookAt
+		(
+		glm::vec3(1.2f, 1.2f, 1.2f),
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, 1.0f)
+		);
+	GLint uniView = glGetUniformLocation(shaderProgram, "view");
+	glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
+
+	glm::mat4 proj = glm::perspective(45.0f, 800.0f / 600.0f, 1.0f, 10.0f);
+	GLint uniProj = glGetUniformLocation(shaderProgram, "proj");
+	glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
+
+	
+	
+
+
+	
+
+
+
 
 	while (!glfwWindowShouldClose(window))
 	{
+
 		//draw code goes here
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		
+
 
 		// background color
 		glClearColor(0.5f, 0.3f, 0.6f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		// Calculate transformation
+
+		glm::mat4 model;
+		model = glm::rotate(
+			model,
+			(float)clock() / (float)CLOCKS_PER_SEC * glm::radians(180.0f),
+			glm::vec3(0.0f, 0.0f, 1.0f)
+			);
+		
+		glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
+	
 
 		//glDrawArrays(GL_TRIANGLES, 0, 6);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
