@@ -1,4 +1,4 @@
-﻿Build started 2/23/2015 10:43:00 AM.
+﻿Build started 2/23/2015 5:19:06 PM.
      1>Project "C:\Users\matthew.beaudoin\Documents\GitHub\GraphicTutorialFix\IntroGL\IntroGL.vcxproj" on node 2 (Build target(s)).
      1>Link:
          IntroGL.vcxproj -> C:\Users\matthew.beaudoin\Documents\GitHub\GraphicTutorialFix\Debug\IntroGL.exe
@@ -6,4 +6,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.06
+Time Elapsed 00:00:00.04

@@ -8,6 +8,8 @@
 #include <fstream>
 #include <GLFW/glfw3.h>
 
+#define GLM_FORCE_RADIANS
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -163,12 +165,13 @@ GLuint CreateProgram(const char *a_vertex, const char *a_frag)
 	//-0.5f,  0.5f, 1.0f, 0.0f, 0.0f  //top left
 //};
 
-float vertices[] = {
+float vertices[] = 
+{
 	//  Position   Color             Texcoords
 	-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left
-	0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top-right
+	0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,  // Top-right
 	0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // Bottom-right
-	-0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // Bottom-left
+	-0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,// Bottom-left
 };
 
 int main()
@@ -213,6 +216,7 @@ int main()
 	glGenBuffers(1, &vbo); // Generate 1 buffer
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
 
 	GLuint ebo;
 	glGenBuffers(1, &ebo);
@@ -327,13 +331,18 @@ int main()
 	GLint texAttrib = glGetAttribLocation(shaderProgram, "texcoord");
 	GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
 	
+	
 	glEnableVertexAttribArray(posAttrib);
 	glEnableVertexAttribArray(texAttrib);
 	glEnableVertexAttribArray(colAttrib);
+
 	
 	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), 0);
 	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(5 * sizeof(float)));
 	glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(2 * sizeof(float)));	
+
+
+
 	//---------------------------------------------------------------------------------------------------------
 	//3D tranforms stuffs
 	GLint uniModel = glGetUniformLocation(shaderProgram, "model");
@@ -353,10 +362,6 @@ int main()
 
 	
 	
-
-
-	
-
 
 
 
