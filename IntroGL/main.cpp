@@ -8,7 +8,7 @@
 #include <fstream>
 #include <GLFW/glfw3.h>
 
-#define GLM_FORCE_RADIANS
+
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -28,16 +28,16 @@ const GLchar* vertexSource =
 "out vec3 Color;"
 "out vec2 Texcoord;"
 
-"uniform mat4 model;"
-"uniform mat4 view;"
-"uniform mat4 proj;"
+"uniform mat4 trans;"
+//"uniform mat4 view;"
+//"uniform mat4 proj;"
 
 
 "void main() "
 "{"
 "	Texcoord = texcoord;"
 "   Color = color;"
-"	gl_Position = proj * view * model * vec4(position, 0.0, 1.0);"
+"	gl_Position = trans * vec4(position, 0.0, 1.0);"
 "}";
 
 const GLchar* fragmentSource =
@@ -50,7 +50,7 @@ const GLchar* fragmentSource =
 "uniform sampler2D texPuppy;"
 "void main() "
 "{"
-"	outColor = mix(texture(texKitten,Texcoord), texture(texPuppy, Texcoord), 0.5);"
+"	outColor = texture(texKitten, Texcoord) * vec4(Color, 1.0);"
 "}";
 
 GLuint CreateShader(GLenum a_eShaderType, const char *a_strShaderFile)
@@ -169,9 +169,9 @@ float vertices[] =
 {
 	//  Position   Color             Texcoords
 	-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left
-	0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,  // Top-right
-	0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // Bottom-right
-	-0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,// Bottom-left
+	0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.1f, 0.0f,  // Top-right
+	0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.1f, 0.33f, // Bottom-right
+	-0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.33f,// Bottom-left
 };
 
 int main()
@@ -217,6 +217,7 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+	
 
 	GLuint ebo;
 	glGenBuffers(1, &ebo);
@@ -303,7 +304,7 @@ int main()
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
 	int width, height;
 	unsigned char* image =
-		SOIL_load_image("sample.png", &width, &height, 0, SOIL_LOAD_RGB);
+		SOIL_load_image("Sonic.png", &width, &height, 0, SOIL_LOAD_RGB);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 		SOIL_free_image_data(image);
 	glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
@@ -345,20 +346,20 @@ int main()
 
 	//---------------------------------------------------------------------------------------------------------
 	//3D tranforms stuffs
-	GLint uniModel = glGetUniformLocation(shaderProgram, "model");
+	GLint uniTrans = glGetUniformLocation(shaderProgram, "trans");
 
-	glm::mat4 view = glm::lookAt
-		(
-		glm::vec3(1.2f, 1.2f, 1.2f),
-		glm::vec3(0.0f, 0.0f, 0.0f),
-		glm::vec3(0.0f, 0.0f, 1.0f)
-		);
-	GLint uniView = glGetUniformLocation(shaderProgram, "view");
-	glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
+	//glm::mat4 view = glm::lookAt
+	//	(
+	//	glm::vec3(1.2f, 1.2f, 1.2f),
+	//	glm::vec3(0.0f, 0.0f, 0.0f),
+	//	glm::vec3(0.0f, 0.0f, 1.0f)
+	//	);
+	//GLint uniView = glGetUniformLocation(shaderProgram, "view");
+	//glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
 
-	glm::mat4 proj = glm::perspective(45.0f, 800.0f / 600.0f, 1.0f, 10.0f);
-	GLint uniProj = glGetUniformLocation(shaderProgram, "proj");
-	glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
+	//glm::mat4 proj = glm::perspective(45.0f, 800.0f / 600.0f, 1.0f, 10.0f);
+	//GLint uniProj = glGetUniformLocation(shaderProgram, "proj");
+	//glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
 
 	
 	
@@ -367,9 +368,6 @@ int main()
 
 	while (!glfwWindowShouldClose(window))
 	{
-
-		//draw code goes here
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		
 
 
@@ -379,15 +377,22 @@ int main()
 
 		// Calculate transformation
 
-		glm::mat4 model;
-		model = glm::rotate(
-			model,
-			(float)clock() / (float)CLOCKS_PER_SEC * glm::radians(180.0f),
+		glm::mat4 trans;
+		trans = glm::rotate(
+			trans,
+			(float)clock() / (float)CLOCKS_PER_SEC * glm::radians(0.0f), //Spin and rate
 			glm::vec3(0.0f, 0.0f, 1.0f)
 			);
 		
-		glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(trans));
 	
+		vertices[6] += 0.1f;
+		vertices[13] += 0.1f;
+		vertices[20] += 0.1f;
+		vertices[27] += 0.1f;
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 		//glDrawArrays(GL_TRIANGLES, 0, 6);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
